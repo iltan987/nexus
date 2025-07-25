@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {},
+  "exports": {
+    "./*": "./src/*.tsx"
+  },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
     "class-variance-authority": "^0.7.1",
