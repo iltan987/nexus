@@ -1,5 +1,5 @@
 import { FlatCompat } from "@eslint/eslintrc";
-import config from "@repo/eslint-config/config";
+import config from "@repo/eslint-config/eslint-prettier-config";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 

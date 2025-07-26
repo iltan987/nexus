@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./config": "./eslint.config.js"
+    "./eslint-prettier-config": "./eslint-prettier-config.js"
   },
   "scripts": {},
   "devDependencies": {
