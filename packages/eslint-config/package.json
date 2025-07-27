@@ -4,13 +4,17 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./eslint-prettier-config": "./eslint-prettier-config.js"
+    "./eslint-prettier-config": "./eslint-prettier-config.js",
+    "./nest": "./nest.js"
   },
   "scripts": {},
   "devDependencies": {
+    "@eslint/js": "^9.31.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.3",
-    "prettier": "^3.6.2"
+    "globals": "^16.3.0",
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.38.0"
   },
   "packageManager": "pnpm@10.13.1"
 }
