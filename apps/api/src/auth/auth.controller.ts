@@ -19,12 +19,15 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @Post('register')
   register(@Body() registerDto: RegisterUserDto) {
-    return this.authService.register({
-      email: registerDto.email,
-      name: registerDto.name,
-      username: registerDto.username,
-      password: registerDto.password,
-      dateOfBirth: registerDto.dateOfBirth,
-    });
+    console.log('Registering user:', registerDto);
+    return registerDto;
+
+    // return this.authService.register({
+    //   email: registerDto.email,
+    //   name: registerDto.name,
+    //   username: registerDto.username,
+    //   password: registerDto.password,
+    //   dateOfBirth: new Date(registerDto.dateOfBirth),
+    // });
   }
 }
