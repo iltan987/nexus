@@ -5,7 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class AuthService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async signIn(email: string, password: string) {
+  async signIn({ email, password }: { email: string; password: string }) {
     const user = await this.prismaService.user.findUnique({
       where: { email },
     });
