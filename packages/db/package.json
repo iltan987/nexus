@@ -2,6 +2,9 @@
   "name": "@repo/db",
   "version": "1.0.0",
   "private": true,
+  "exports": {
+    "./*": "./generated/*.js"
+  },
   "dependencies": {
     "@prisma/client": "6.13.0"
   },
