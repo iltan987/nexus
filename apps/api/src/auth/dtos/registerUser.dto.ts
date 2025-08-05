@@ -37,11 +37,9 @@ export class RegisterUserDto {
   @IsNotEmpty()
   password!: string;
 
-  @Transform(({ value }) => {
+  @Transform(({ value, key }) => {
     if (typeof value !== 'string') {
-      throw new BadRequestException(
-        `Date of birth must be a string in YYYY-MM-DD format, received: ${typeof value}`,
-      );
+      throw new BadRequestException(`${key} must be a string.`);
     }
 
     const isValidDate = validator.isDate(value, {
@@ -51,14 +49,12 @@ export class RegisterUserDto {
     });
 
     if (!isValidDate) {
-      throw new BadRequestException(
-        `Date of birth must be in YYYY-MM-DD format.`,
-      );
+      throw new BadRequestException(`${key} must be in YYYY-MM-DD format.`);
     }
 
     const date = new Date(value);
     if (isNaN(date.getTime())) {
-      throw new BadRequestException(`Date of birth must be a valid date.`);
+      throw new BadRequestException(`${key} must be a valid date.`);
     }
 
     return date;
