@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { argon2id, hash, verify } from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { RegisterUserDto } from './dtos/registerUser.dto';
 
 @Injectable()
 export class AuthService {
@@ -16,9 +17,9 @@ export class AuthService {
 
   async signIn({ email, password }: { email: string; password: string }) {
     try {
-    const user = await this.prismaService.user.findUnique({
-      where: { email },
-    });
+      const user = await this.prismaService.user.findUnique({
+        where: { email },
+      });
 
       if (!user || !user.password) {
         this.logger.warn(
@@ -31,12 +32,12 @@ export class AuthService {
 
       if (!isPasswordValid) {
         this.logger.warn(`Invalid password for user with email: ${email}`);
-      throw new UnauthorizedException('Invalid credentials');
-    }
+        throw new UnauthorizedException('Invalid credentials');
+      }
 
       this.logger.log(`User signed in successfully: ${email}`);
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+      const { password: _, ...userWithoutPassword } = user;
+      return userWithoutPassword;
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         throw error;
@@ -55,40 +56,36 @@ export class AuthService {
     parallelism: 1,
   };
 
-  async register({
-    email,
-    name,
-    username,
-    password,
-    dateOfBirth,
-  }: {
-    email: string;
-    name?: string;
-    username: string;
-    password: string;
-    dateOfBirth: Date;
-  }) {
-    const existingUser = await this.prismaService.user.findUnique({
-      where: { email },
-    });
+  async register(registerDto: RegisterUserDto) {
+    await this.prismaService.$transaction(async (prisma) => {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: registerDto.email },
+            { username: registerDto.username },
+          ],
+        },
+      });
 
-    if (existingUser) {
-      throw new ConflictException('User already exists');
-    }
+      if (existingUser) {
+        if (existingUser.email === registerDto.email) {
+          throw new ConflictException('Email already in use');
+        }
+        throw new ConflictException('Username already in use');
+      }
 
-    const hashedPassword = await hash(password, this.hashOptions);
+      const hashedPassword = await hash(registerDto.password, this.hashOptions);
 
-    await this.prismaService.user.create({
-      data: {
-        email,
-        name,
-        username,
-        password: hashedPassword,
-        dateOfBirth,
-      },
-      select: {
-        id: true,
-      },
+      await prisma.user.create({
+        data: {
+          ...registerDto,
+          password: hashedPassword,
+        },
+        select: {
+          id: true,
+        },
+      });
+      this.logger.log(`User registered successfully: ${registerDto.email}`);
     });
   }
 }
