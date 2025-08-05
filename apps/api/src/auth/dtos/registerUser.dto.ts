@@ -5,6 +5,7 @@ import {
   IsEmail,
   IsNotEmpty,
   IsOptional,
+  IsString,
   Matches,
   MinLength,
 } from 'class-validator';
@@ -15,10 +16,13 @@ export class RegisterUserDto {
   @IsNotEmpty()
   email!: string;
 
+  @IsString()
   @IsOptional()
   name?: string;
 
+  @MinLength(3)
   @IsNotEmpty()
+  @IsString()
   username!: string;
 
   @Matches(/[ !"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]/, {
