@@ -1,4 +1,4 @@
-import { ConsoleLogger, ValidationPipe } from '@nestjs/common';
+import { ConsoleLogger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
@@ -9,14 +9,6 @@ async function bootstrap() {
     }),
   });
   app.enableCors();
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      stopAtFirstError: true,
-    }),
-  );
   await app.listen(process.env.PORT ?? 3001);
 }
 void bootstrap();
