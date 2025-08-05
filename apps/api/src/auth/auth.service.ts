@@ -3,6 +3,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { argon2id, hash, verify } from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -14,13 +15,25 @@ export class AuthService {
       where: { email },
     });
 
-    if (!user || !user.password || user.password !== password) {
+      if (!user || !user.password) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const isPasswordValid = await verify(user.password, password);
+
+      if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
-  }
+
+  private readonly hashOptions = {
+    type: argon2id,
+    memoryCost: 19 * 1024, // 19 MiB in KiB
+    timeCost: 2,
+    parallelism: 1,
+  };
 
   async register({
     email,
@@ -43,12 +56,14 @@ export class AuthService {
       throw new ConflictException('User already exists');
     }
 
+    const hashedPassword = await hash(password, this.hashOptions);
+
     await this.prismaService.user.create({
       data: {
         email,
         name,
         username,
-        password,
+        password: hashedPassword,
         dateOfBirth,
       },
       select: {
