@@ -1,0 +1,335 @@
+### Auth Controller Test Cases - Edge Cases & Security Tests
+
+##############################################################################
+# SIGN IN TESTS
+##############################################################################
+
+### 1. Valid Sign In
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "@asdASDasd1"
+}
+
+### 2. SQL Injection Attempt in Email
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com'; DROP TABLE users; --",
+  "password": "password123"
+}
+
+### 3. NoSQL Injection Attempt
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": {"$ne": null},
+  "password": {"$ne": null}
+}
+
+### 4. XSS Attempt in Email
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "<script>alert('xss')</script>@example.com",
+  "password": "password123"
+}
+
+### 5. Empty Fields
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "",
+  "password": ""
+}
+
+### 6. Missing Password Field
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
+### 7. Invalid Email Format
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "password": "password123"
+}
+
+### 8. Password Too Short
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "123"
+}
+
+### 9. Null Values
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": null,
+  "password": null
+}
+
+### 10. Extra Malicious Fields
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123",
+  "admin": true,
+  "role": "superuser",
+  "__proto__": {"admin": true}
+}
+
+##############################################################################
+# REGISTRATION TESTS
+##############################################################################
+
+### 11. Valid Registration
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "displayName": "New User",
+  "username": "newuser123",
+  "password": "SecurePass123!",
+  "dateOfBirth": "1990-05-15"
+}
+
+### 12. SQL Injection in Username
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "displayName": "Test User",
+  "username": "admin'; DROP TABLE users; --",
+  "password": "password123",
+  "dateOfBirth": "1990-01-01"
+}
+
+### 13. XSS in Display Name
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "displayName": "<script>alert('XSS')</script>",
+  "username": "testuser",
+  "password": "password123",
+  "dateOfBirth": "1990-01-01"
+}
+
+### 14. Username with Invalid Characters
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "displayName": "Test User",
+  "username": "test@user#123",
+  "password": "password123",
+  "dateOfBirth": "1990-01-01"
+}
+
+### 15. Consecutive Periods in Username
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "displayName": "Test User",
+  "username": "test..user",
+  "password": "password123",
+  "dateOfBirth": "1990-01-01"
+}
+
+### 16. Username Too Long
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "displayName": "Test User",
+  "username": "thisusernameiswaytoolongandexceedsthemaximumlengthof32characters",
+  "password": "password123",
+  "dateOfBirth": "1990-01-01"
+}
+
+### 17. Display Name Too Long
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "displayName": "This display name is way too long and exceeds the maximum length of 32 characters",
+  "username": "testuser",
+  "password": "password123",
+  "dateOfBirth": "1990-01-01"
+}
+
+### 18. Password Too Long
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "displayName": "Test User",
+  "username": "testuser",
+  "password": "ThisPasswordIsWayTooLongAndExceedsTheMaximumLengthOf72CharactersWhichShouldBeRejected",
+  "dateOfBirth": "1990-01-01"
+}
+
+### 19. Underage User (12 years old)
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "kid@example.com",
+  "displayName": "Kid User",
+  "username": "kiduser",
+  "password": "password123",
+  "dateOfBirth": "2013-01-01"
+}
+
+### 20. Invalid Date Format
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "displayName": "Test User",
+  "username": "testuser",
+  "password": "password123",
+  "dateOfBirth": "01/01/1990"
+}
+
+### 21. Future Date of Birth
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "displayName": "Test User",
+  "username": "testuser",
+  "password": "password123",
+  "dateOfBirth": "2030-01-01"
+}
+
+### 22. Empty Required Fields
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "",
+  "displayName": "",
+  "username": "",
+  "password": "",
+  "dateOfBirth": ""
+}
+
+### 23. Missing Required Fields
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "displayName": "Test User"
+}
+
+### 24. Prototype Pollution Attempt
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "displayName": "Test User",
+  "username": "testuser",
+  "password": "password123",
+  "dateOfBirth": "1990-01-01",
+  "__proto__": {
+    "admin": true
+  },
+  "constructor": {
+    "prototype": {
+      "admin": true
+    }
+  }
+}
+
+### 25. Unicode/Emoji in Fields
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "displayName": "Test 👤 User 🎉",
+  "username": "test🔥user",
+  "password": "password123",
+  "dateOfBirth": "1990-01-01"
+}
+
+##############################################################################
+# MALFORMED REQUEST TESTS
+##############################################################################
+
+### 26. Invalid JSON
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+
+### 27. Wrong Content-Type
+POST http://localhost:3001/auth/login
+Content-Type: text/plain
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+### 28. Array Instead of Object
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+[
+  {
+    "email": "test@example.com",
+    "password": "password123"
+  }
+]
+
+### 29. String Instead of Object
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+"email=test@example.com&password=password123"
+
+### 30. Very Large Payload
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "displayName": "A".repeat(10000),
+  "username": "testuser",
+  "password": "password123",
+  "dateOfBirth": "1990-01-01"
+}
