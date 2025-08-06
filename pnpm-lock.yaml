@@ -29,6 +29,9 @@ importers:
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       argon2:
         specifier: ^0.43.1
         version: 0.43.1
@@ -182,6 +185,12 @@ importers:
       typescript-eslint:
         specifier: ^8.38.0
         version: 8.38.0(eslint@9.32.0(jiti@2.5.1))(typescript@5.8.3)
+
+  packages/shared:
+    dependencies:
+      zod:
+        specifier: ^4.0.14
+        version: 4.0.14
 
   packages/ui:
     dependencies:

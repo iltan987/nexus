@@ -6,12 +6,12 @@ import {
   Post,
   UsePipes,
 } from '@nestjs/common';
+import { registerUserSchema } from '@repo/shared/schemas/register-user.schema';
+import { signInUserSchema } from '@repo/shared/schemas/sign-in-user.schema';
 import { ZodValidationPipe } from 'src/pipes/zod-validation.pipe';
 import { AuthService } from './auth.service';
 import { RegisterUserDto } from './dtos/registerUser.dto';
 import { SignInUserDto } from './dtos/signInUser.dto';
-import { registerUserSchema } from './schemas/register-user.schema';
-import { signInUserSchema } from './schemas/sign-in-user.schema';
 
 @Controller('auth')
 export class AuthController {
