@@ -22,11 +22,7 @@ export class AuthController {
   @UsePipes(new ZodValidationPipe(signInUserSchema))
   signIn(@Body() signInDto: SignInUserDto) {
     console.log('Signing in user:', signInDto);
-    return signInDto;
-    // return this.authService.signIn({
-    //   email: signInDto.email,
-    //   password: signInDto.password,
-    // });
+    return this.authService.signIn(signInDto);
   }
 
   @HttpCode(HttpStatus.CREATED)
@@ -34,14 +30,6 @@ export class AuthController {
   @UsePipes(new ZodValidationPipe(registerUserSchema))
   register(@Body() registerDto: RegisterUserDto) {
     console.log('Registering user:', registerDto);
-    return registerDto;
-
-    // return this.authService.register({
-    //   email: registerDto.email,
-    //   name: registerDto.name,
-    //   username: registerDto.username,
-    //   password: registerDto.password,
-    //   dateOfBirth: new Date(registerDto.dateOfBirth),
-    // });
+    return this.authService.register(registerDto);
   }
 }
