@@ -46,13 +46,16 @@ export const registerUserSchema = z.strictObject({
     .string()
     .trim()
     .nonempty({ message: 'Date of birth is required' })
+    .regex(/^\d{4}-\d{2}-\d{2}$/, {
+      message: 'Date must be in ISO format YYYY-MM-DD',
+    })
     .superRefine((value, ctx) => {
       // Step 1: Check format
       const { success, data } = z.iso.date().safeParse(value);
       if (!success) {
         ctx.addIssue({
           code: 'custom',
-          message: 'Date must be in ISO format YYYY-MM-DD',
+          message: 'Invalid date',
         });
         return;
       }
