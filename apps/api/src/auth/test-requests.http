@@ -106,7 +106,7 @@ Content-Type: application/json
 
 {
   "email": "newuser@example.com",
-  "displayName": "New User",
+  "name": "New User",
   "username": "newuser123",
   "password": "SecurePass123!",
   "dateOfBirth": "1990-05-15"
@@ -118,7 +118,7 @@ Content-Type: application/json
 
 {
   "email": "test@example.com",
-  "displayName": "Test User",
+  "name": "Test User",
   "username": "admin'; DROP TABLE users; --",
   "password": "password123",
   "dateOfBirth": "1990-01-01"
@@ -130,7 +130,7 @@ Content-Type: application/json
 
 {
   "email": "test@example.com",
-  "displayName": "<script>alert('XSS')</script>",
+  "name": "<script>alert('XSS')</script>",
   "username": "testuser",
   "password": "password123",
   "dateOfBirth": "1990-01-01"
@@ -142,7 +142,7 @@ Content-Type: application/json
 
 {
   "email": "test@example.com",
-  "displayName": "Test User",
+  "name": "Test User",
   "username": "test@user#123",
   "password": "password123",
   "dateOfBirth": "1990-01-01"
@@ -154,7 +154,7 @@ Content-Type: application/json
 
 {
   "email": "test@example.com",
-  "displayName": "Test User",
+  "name": "Test User",
   "username": "test..user",
   "password": "password123",
   "dateOfBirth": "1990-01-01"
@@ -166,7 +166,7 @@ Content-Type: application/json
 
 {
   "email": "test@example.com",
-  "displayName": "Test User",
+  "name": "Test User",
   "username": "thisusernameiswaytoolongandexceedsthemaximumlengthof32characters",
   "password": "password123",
   "dateOfBirth": "1990-01-01"
@@ -178,7 +178,7 @@ Content-Type: application/json
 
 {
   "email": "test@example.com",
-  "displayName": "This display name is way too long and exceeds the maximum length of 32 characters",
+  "name": "This display name is way too long and exceeds the maximum length of 32 characters",
   "username": "testuser",
   "password": "password123",
   "dateOfBirth": "1990-01-01"
@@ -190,7 +190,7 @@ Content-Type: application/json
 
 {
   "email": "test@example.com",
-  "displayName": "Test User",
+  "name": "Test User",
   "username": "testuser",
   "password": "ThisPasswordIsWayTooLongAndExceedsTheMaximumLengthOf72CharactersWhichShouldBeRejected",
   "dateOfBirth": "1990-01-01"
@@ -202,7 +202,7 @@ Content-Type: application/json
 
 {
   "email": "kid@example.com",
-  "displayName": "Kid User",
+  "name": "Kid User",
   "username": "kiduser",
   "password": "password123",
   "dateOfBirth": "2013-01-01"
@@ -214,7 +214,7 @@ Content-Type: application/json
 
 {
   "email": "test@example.com",
-  "displayName": "Test User",
+  "name": "Test User",
   "username": "testuser",
   "password": "password123",
   "dateOfBirth": "01/01/1990"
@@ -226,7 +226,7 @@ Content-Type: application/json
 
 {
   "email": "test@example.com",
-  "displayName": "Test User",
+  "name": "Test User",
   "username": "testuser",
   "password": "password123",
   "dateOfBirth": "2030-01-01"
@@ -238,7 +238,7 @@ Content-Type: application/json
 
 {
   "email": "",
-  "displayName": "",
+  "name": "",
   "username": "",
   "password": "",
   "dateOfBirth": ""
@@ -249,7 +249,7 @@ POST http://localhost:3001/auth/register
 Content-Type: application/json
 
 {
-  "displayName": "Test User"
+  "name": "Test User"
 }
 
 ### 24. Prototype Pollution Attempt
@@ -258,7 +258,7 @@ Content-Type: application/json
 
 {
   "email": "test@example.com",
-  "displayName": "Test User",
+  "name": "Test User",
   "username": "testuser",
   "password": "password123",
   "dateOfBirth": "1990-01-01",
@@ -278,7 +278,7 @@ Content-Type: application/json
 
 {
   "email": "test@example.com",
-  "displayName": "Test 👤 User 🎉",
+  "name": "Test 👤 User 🎉",
   "username": "test🔥user",
   "password": "password123",
   "dateOfBirth": "1990-01-01"
@@ -328,7 +328,7 @@ Content-Type: application/json
 
 {
   "email": "test@example.com",
-  "displayName": "A".repeat(10000),
+  "name": "A".repeat(10000),
   "username": "testuser",
   "password": "password123",
   "dateOfBirth": "1990-01-01"

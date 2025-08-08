@@ -9,12 +9,12 @@ export const registerUserSchema = z.strictObject({
     .toLowerCase()
     .pipe(z.email({ message: 'Invalid email address' })),
 
-  // 🆔 Display name (optional)
-  displayName: z
+  // 🆔 Name (optional)
+  name: z
     .string()
     .trim()
-    .nonempty({ message: 'Display name cannot be empty' })
-    .max(32, { message: 'Display name must be at most 32 characters' })
+    .nonempty({ message: 'Name cannot be empty' })
+    .max(32, { message: 'Name must be at most 32 characters' })
     .optional(),
 
   // 👤 Username
