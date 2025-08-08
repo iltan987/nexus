@@ -5,13 +5,17 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { argon2id, hash, verify } from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegisterUserDto } from './dtos/registerUser.dto';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private jwtService: JwtService,
+  ) {}
 
   private readonly logger = new Logger(AuthService.name);
 
@@ -36,8 +40,16 @@ export class AuthService {
       }
 
       this.logger.log(`User signed in successfully: ${email}`);
-      const { password: _, ...userWithoutPassword } = user;
-      return userWithoutPassword;
+
+      const payload = {
+        sub: user.id,
+        username: user.username,
+        displayName: user.name,
+      };
+
+      return {
+        access_token: await this.jwtService.signAsync(payload),
+      };
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         throw error;
