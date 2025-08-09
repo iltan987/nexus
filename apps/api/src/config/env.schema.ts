@@ -8,11 +8,6 @@ export const EnvSchema = z.object({
 
   JWT_SECRET: z.string().trim(),
   JWT_EXPIRES_IN: z.string().trim().default('60s'),
-
-  DATABASE_URL: z
-    .string()
-    .trim()
-    .pipe(z.url({ message: 'DATABASE_URL must be a valid URL' })),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
