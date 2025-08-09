@@ -6,7 +6,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { argon2id, hash, verify } from 'argon2';
+import type { JwtPayload } from '@repo/shared/types/jwt-payload';
+import { argon2id, hash, Options, verify } from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegisterUserDto } from './dtos/registerUser.dto';
 
@@ -41,10 +42,10 @@ export class AuthService {
 
       this.logger.log(`User signed in successfully: ${email}`);
 
-      const payload = {
+      const payload: JwtPayload = {
         sub: user.id,
         username: user.username,
-        displayName: user.name,
+        name: user.name,
       };
 
       return {
@@ -61,7 +62,9 @@ export class AuthService {
     }
   }
 
-  private readonly hashOptions = {
+  private readonly hashOptions: Options & {
+    raw?: boolean;
+  } = {
     type: argon2id,
     memoryCost: 19 * 1024, // 19 MiB in KiB
     timeCost: 2,
