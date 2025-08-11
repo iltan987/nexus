@@ -5,10 +5,10 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { JwtService } from '@nestjs/jwt';
+import { JwtService } from '@nestjs/jwt';
 import type { JwtPayload } from '@repo/shared/types/jwt-payload';
 import { argon2id, hash, verify, type Options } from 'argon2';
-import type { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import type { RegisterUserDto } from './dtos/registerUser.dto';
 
 @Injectable()
