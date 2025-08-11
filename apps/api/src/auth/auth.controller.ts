@@ -9,9 +9,9 @@ import {
 import { registerUserSchema } from '@repo/shared/schemas/register-user.schema';
 import { signInUserSchema } from '@repo/shared/schemas/sign-in-user.schema';
 import { ZodValidationPipe } from 'src/pipes/zod-validation.pipe';
-import { AuthService } from './auth.service';
-import { RegisterUserDto } from './dtos/registerUser.dto';
-import { SignInUserDto } from './dtos/signInUser.dto';
+import type { AuthService } from './auth.service';
+import type { RegisterUserDto } from './dtos/registerUser.dto';
+import type { SignInUserDto } from './dtos/signInUser.dto';
 
 @Controller('auth')
 export class AuthController {

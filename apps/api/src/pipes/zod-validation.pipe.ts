@@ -1,5 +1,5 @@
-import { BadRequestException, PipeTransform } from '@nestjs/common';
-import { treeifyError, ZodType } from 'zod';
+import { type PipeTransform, BadRequestException } from '@nestjs/common';
+import { type ZodType, treeifyError } from 'zod';
 
 export class ZodValidationPipe implements PipeTransform {
   constructor(private schema: ZodType) {}
