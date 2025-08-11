@@ -19,6 +19,7 @@ import { AuthService } from './auth.service';
         },
       }),
     }),
+    CoreModule,
   ],
   controllers: [AuthController],
   providers: [AuthService],

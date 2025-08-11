@@ -10,6 +10,7 @@ import type { JwtPayload } from '@repo/shared/types/jwt-payload';
 import { argon2id, hash, verify, type Options } from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 import type { RegisterUserDto } from './dtos/registerUser.dto';
+import type { UpdateUserDto } from './dtos/updateUser.dto';
 
 @Injectable()
 export class AuthService {
@@ -102,5 +103,39 @@ export class AuthService {
       });
       this.logger.log(`User registered successfully: ${registerDto.email}`);
     });
+  }
+
+  async updateProfile(userId: string, updateDto: UpdateUserDto) {
+    try {
+      const existingUser = await this.prismaService.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!existingUser) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      const updatedUser = await this.prismaService.user.update({
+        where: { id: userId },
+        data: {
+          ...(updateDto.email ? { email: updateDto.email } : {}),
+          ...(updateDto.name ? { name: updateDto.name } : {}),
+          ...(updateDto.username ? { username: updateDto.username } : {}),
+          ...(updateDto.password
+            ? { password: await hash(updateDto.password, this.hashOptions) }
+            : {}),
+          ...(updateDto.dateOfBirth
+            ? { dateOfBirth: updateDto.dateOfBirth }
+            : {}),
+        },
+      });
+
+      this.logger.log(`User profile updated successfully: ${updatedUser.id}`);
+    } catch (error) {
+      this.logger.error(`Error updating profile for user ID: ${userId}`, error);
+      throw new InternalServerErrorException(
+        'An error occurred while updating the profile. Please try again later.',
+      );
+    }
   }
 }
