@@ -11,5 +11,6 @@
     "source.fixAll.eslint": "always",
     "source.organizeImports": "always",
     "source.removeUnusedImports": "always"
-  }
+  },
+  "typescript.preferences.preferTypeOnlyAutoImports": true
 }
