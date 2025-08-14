@@ -16,6 +16,7 @@ export const updateUserSchema = z.strictObject({
     .trim()
     .nonempty({ message: 'Name cannot be empty' })
     .max(32, { message: 'Name must be at most 32 characters' })
+    .nullable()
     .optional(),
 
   // 👤 Username

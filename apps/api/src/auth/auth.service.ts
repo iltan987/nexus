@@ -7,7 +7,6 @@ import {
   AUTH_ERROR_CODES,
   createErrorResult,
   createSuccessResult,
-  createVoidSuccessResult,
   type RegisterResult,
   type SignInResult,
   type UpdateProfileResult,
@@ -56,6 +55,7 @@ export class AuthService {
         sub: user.id,
         username: user.username,
         name: user.name,
+        email: user.email,
       };
 
       return createSuccessResult({
@@ -76,57 +76,59 @@ export class AuthService {
     parallelism: 1,
   };
 
+  // Fields that are included in JWT payload and require token regeneration
+  private readonly JWT_PAYLOAD_FIELDS = ['username', 'name', 'email'] as const;
+
+  /**
+   * Checks if the update requires JWT token regeneration
+   * @param updateDto - The update data
+   * @returns true if token should be regenerated
+   */
+  private shouldRegenerateToken(updateDto: UpdateUserDto): boolean {
+    return this.JWT_PAYLOAD_FIELDS.some(
+      (field) => updateDto[field] !== undefined,
+    );
+  }
+
   async register(registerDto: RegisterUserDto): Promise<RegisterResult> {
     try {
-      await this.prismaService.$transaction(async (prisma) => {
-        const existingUser = await prisma.user.findFirst({
-          where: {
-            OR: [
-              { email: registerDto.email },
-              { username: registerDto.username },
-            ],
-          },
-        });
-
-        if (existingUser) {
-          if (existingUser.email === registerDto.email) {
-            throw new Error('EMAIL_EXISTS');
-          }
-          throw new Error('USERNAME_EXISTS');
-        }
-
-        const hashedPassword = await hash(
-          registerDto.password,
-          this.hashOptions,
-        );
-
-        await prisma.user.create({
-          data: {
-            ...registerDto,
-            password: hashedPassword,
-          },
-          select: {
-            id: true,
-          },
-        });
-        this.logger.log(`User registered successfully: ${registerDto.email}`);
+      const existingUser = await this.prismaService.user.findFirst({
+        where: {
+          OR: [
+            { email: registerDto.email },
+            { username: registerDto.username },
+          ],
+        },
       });
 
-      return createVoidSuccessResult();
+      if (existingUser) {
+        if (existingUser.email === registerDto.email) {
+          return createErrorResult(AUTH_ERROR_CODES.EMAIL_CONFLICT);
+        }
+        return createErrorResult(AUTH_ERROR_CODES.USERNAME_CONFLICT);
+      }
+
+      // Hash password outside transaction
+      const hashedPassword = await hash(registerDto.password, this.hashOptions);
+
+      // Only use transaction for the actual user creation
+      await this.prismaService.user.create({
+        data: {
+          ...registerDto,
+          password: hashedPassword,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      this.logger.log(`User registered successfully: ${registerDto.email}`);
+      return createSuccessResult(undefined);
     } catch (error) {
       this.logger.error(
         `Error during registration for email: ${registerDto.email}`,
         error,
       );
-
-      if (error instanceof Error) {
-        if (error.message === 'EMAIL_EXISTS') {
-          return createErrorResult(AUTH_ERROR_CODES.EMAIL_CONFLICT);
-        }
-        if (error.message === 'USERNAME_EXISTS') {
-          return createErrorResult(AUTH_ERROR_CODES.USERNAME_CONFLICT);
-        }
-      }
 
       return createErrorResult(AUTH_ERROR_CODES.INTERNAL_ERROR);
     }
@@ -145,11 +147,36 @@ export class AuthService {
         return createErrorResult(AUTH_ERROR_CODES.USER_NOT_FOUND);
       }
 
+      // Check for duplicate email
+      if (updateDto.email) {
+        const emailExists = await this.prismaService.user.findUnique({
+          where: { email: updateDto.email },
+        });
+
+        if (emailExists && emailExists.id !== userId) {
+          return createErrorResult(AUTH_ERROR_CODES.EMAIL_CONFLICT);
+        }
+      }
+
+      // Check for duplicate username
+      if (updateDto.username) {
+        const usernameExists = await this.prismaService.user.findUnique({
+          where: { username: updateDto.username },
+        });
+
+        if (usernameExists && usernameExists.id !== userId) {
+          return createErrorResult(AUTH_ERROR_CODES.USERNAME_CONFLICT);
+        }
+      }
+
+      // Check if token regeneration is needed
+      const needsTokenRegeneration = this.shouldRegenerateToken(updateDto);
+
       const updatedUser = await this.prismaService.user.update({
         where: { id: userId },
         data: {
           ...(updateDto.email ? { email: updateDto.email } : {}),
-          ...(updateDto.name ? { name: updateDto.name } : {}),
+          ...(updateDto.name !== undefined ? { name: updateDto.name } : {}),
           ...(updateDto.username ? { username: updateDto.username } : {}),
           ...(updateDto.password
             ? { password: await hash(updateDto.password, this.hashOptions) }
@@ -162,7 +189,26 @@ export class AuthService {
 
       this.logger.log(`User profile updated successfully: ${updatedUser.id}`);
 
-      return createVoidSuccessResult();
+      // Generate new token if JWT payload fields were updated
+      if (needsTokenRegeneration) {
+        const payload: JwtPayload = {
+          sub: updatedUser.id,
+          username: updatedUser.username,
+          name: updatedUser.name,
+          email: updatedUser.email,
+        };
+
+        const newToken = await this.jwtService.signAsync(payload);
+        this.logger.log(`New JWT token generated for user: ${updatedUser.id}`);
+
+        return createSuccessResult<{ access_token: string }>({
+          access_token: newToken,
+        });
+      }
+
+      return createSuccessResult<{ access_token: undefined }>({
+        access_token: undefined,
+      });
     } catch (error) {
       this.logger.error(`Error updating profile for user ID: ${userId}`, error);
       return createErrorResult(AUTH_ERROR_CODES.INTERNAL_ERROR);

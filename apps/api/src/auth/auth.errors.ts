@@ -55,7 +55,7 @@ export type AuthResult<T> =
 
 export type SignInResult = AuthResult<{ access_token: string }>;
 export type RegisterResult = AuthResult<void>;
-export type UpdateProfileResult = AuthResult<void>;
+export type UpdateProfileResult = AuthResult<{ access_token?: string }>;
 
 // Utility functions for creating results
 export function createSuccessResult<T>(data: T): AuthResult<T> {

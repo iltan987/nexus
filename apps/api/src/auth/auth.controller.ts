@@ -80,6 +80,7 @@ export class AuthController {
   async updateProfile(
     @User() user: JwtPayload,
     @Body(new ZodValidationPipe(updateUserSchema)) updateDto: UpdateUserDto,
+    @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.authService.updateProfile(user.sub, updateDto);
 
@@ -87,7 +88,15 @@ export class AuthController {
       throwHttpExceptionFromResult(result);
     }
 
-    return result.data;
+    // If a new token was generated, update the cookie
+    if (result.data.access_token) {
+      res.cookie('access_token', result.data.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      });
+    }
   }
 
   @HttpCode(HttpStatus.OK)
