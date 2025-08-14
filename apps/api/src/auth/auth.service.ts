@@ -1,14 +1,17 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { JwtPayload } from '@repo/shared/types/jwt-payload';
 import { argon2id, hash, verify, type Options } from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
+import {
+  AUTH_ERROR_CODES,
+  createErrorResult,
+  createSuccessResult,
+  createVoidSuccessResult,
+  type RegisterResult,
+  type SignInResult,
+  type UpdateProfileResult,
+} from './auth.errors';
 import type { RegisterUserDto } from './dtos/registerUser.dto';
 import type { UpdateUserDto } from './dtos/updateUser.dto';
 
@@ -21,7 +24,13 @@ export class AuthService {
 
   private readonly logger = new Logger(AuthService.name);
 
-  async signIn({ email, password }: { email: string; password: string }) {
+  async signIn({
+    email,
+    password,
+  }: {
+    email: string;
+    password: string;
+  }): Promise<SignInResult> {
     try {
       const user = await this.prismaService.user.findUnique({
         where: { email },
@@ -31,14 +40,14 @@ export class AuthService {
         this.logger.warn(
           `Sign-in attempt with non-existing user with email: ${email}`,
         );
-        throw new UnauthorizedException('Invalid credentials');
+        return createErrorResult(AUTH_ERROR_CODES.INVALID_CREDENTIALS);
       }
 
       const isPasswordValid = await verify(user.password, password);
 
       if (!isPasswordValid) {
         this.logger.warn(`Invalid password for user with email: ${email}`);
-        throw new UnauthorizedException('Invalid credentials');
+        return createErrorResult(AUTH_ERROR_CODES.INVALID_CREDENTIALS);
       }
 
       this.logger.log(`User signed in successfully: ${email}`);
@@ -49,17 +58,12 @@ export class AuthService {
         name: user.name,
       };
 
-      return {
+      return createSuccessResult({
         access_token: await this.jwtService.signAsync(payload),
-      };
+      });
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
       this.logger.error(`Error during sign-in for email: ${email}`, error);
-      throw new InternalServerErrorException(
-        'An error occurred during sign-in. Please try again later.',
-      );
+      return createErrorResult(AUTH_ERROR_CODES.INTERNAL_ERROR);
     }
   }
 
@@ -72,47 +76,73 @@ export class AuthService {
     parallelism: 1,
   };
 
-  async register(registerDto: RegisterUserDto) {
-    await this.prismaService.$transaction(async (prisma) => {
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          OR: [
-            { email: registerDto.email },
-            { username: registerDto.username },
-          ],
-        },
+  async register(registerDto: RegisterUserDto): Promise<RegisterResult> {
+    try {
+      await this.prismaService.$transaction(async (prisma) => {
+        const existingUser = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: registerDto.email },
+              { username: registerDto.username },
+            ],
+          },
+        });
+
+        if (existingUser) {
+          if (existingUser.email === registerDto.email) {
+            throw new Error('EMAIL_EXISTS');
+          }
+          throw new Error('USERNAME_EXISTS');
+        }
+
+        const hashedPassword = await hash(
+          registerDto.password,
+          this.hashOptions,
+        );
+
+        await prisma.user.create({
+          data: {
+            ...registerDto,
+            password: hashedPassword,
+          },
+          select: {
+            id: true,
+          },
+        });
+        this.logger.log(`User registered successfully: ${registerDto.email}`);
       });
 
-      if (existingUser) {
-        if (existingUser.email === registerDto.email) {
-          throw new ConflictException('Email already in use');
+      return createVoidSuccessResult();
+    } catch (error) {
+      this.logger.error(
+        `Error during registration for email: ${registerDto.email}`,
+        error,
+      );
+
+      if (error instanceof Error) {
+        if (error.message === 'EMAIL_EXISTS') {
+          return createErrorResult(AUTH_ERROR_CODES.EMAIL_CONFLICT);
         }
-        throw new ConflictException('Username already in use');
+        if (error.message === 'USERNAME_EXISTS') {
+          return createErrorResult(AUTH_ERROR_CODES.USERNAME_CONFLICT);
+        }
       }
 
-      const hashedPassword = await hash(registerDto.password, this.hashOptions);
-
-      await prisma.user.create({
-        data: {
-          ...registerDto,
-          password: hashedPassword,
-        },
-        select: {
-          id: true,
-        },
-      });
-      this.logger.log(`User registered successfully: ${registerDto.email}`);
-    });
+      return createErrorResult(AUTH_ERROR_CODES.INTERNAL_ERROR);
+    }
   }
 
-  async updateProfile(userId: string, updateDto: UpdateUserDto) {
+  async updateProfile(
+    userId: string,
+    updateDto: UpdateUserDto,
+  ): Promise<UpdateProfileResult> {
     try {
       const existingUser = await this.prismaService.user.findUnique({
         where: { id: userId },
       });
 
       if (!existingUser) {
-        throw new UnauthorizedException('User not found');
+        return createErrorResult(AUTH_ERROR_CODES.USER_NOT_FOUND);
       }
 
       const updatedUser = await this.prismaService.user.update({
@@ -131,11 +161,11 @@ export class AuthService {
       });
 
       this.logger.log(`User profile updated successfully: ${updatedUser.id}`);
+
+      return createVoidSuccessResult();
     } catch (error) {
       this.logger.error(`Error updating profile for user ID: ${userId}`, error);
-      throw new InternalServerErrorException(
-        'An error occurred while updating the profile. Please try again later.',
-      );
+      return createErrorResult(AUTH_ERROR_CODES.INTERNAL_ERROR);
     }
   }
 }
