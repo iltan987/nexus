@@ -35,7 +35,6 @@ export class AuthController {
     @Body() signInDto: SignInUserDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    console.log('Signing in user:', signInDto);
     const result = await this.authService.signIn(signInDto);
 
     if (!result.success) {
@@ -58,7 +57,6 @@ export class AuthController {
   @Post('register')
   @UsePipes(new ZodValidationPipe(registerUserSchema))
   async register(@Body() registerDto: RegisterUserDto) {
-    console.log('Registering user:', registerDto);
     const result = await this.authService.register(registerDto);
 
     if (!result.success) {

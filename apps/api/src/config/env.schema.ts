@@ -7,7 +7,7 @@ export const EnvSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3001),
 
   JWT_SECRET: z.string().trim(),
-  JWT_EXPIRES_IN: z.string().trim().default('60s'),
+  JWT_EXPIRES_IN: z.string().trim().default('10m'),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
