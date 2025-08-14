@@ -1,11 +1,281 @@
-### Create a new user
-POST http://localhost:3001/users
+### === AUTHENTICATION API TESTS ===
+
+# ========================================
+# 📝 REGISTER NEW USER
+# ========================================
+
+### Register - Valid User
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "username": "john_doe",
+  "password": "securepassword123",
+  "name": "John Doe",
+  "dateOfBirth": "1995-06-15"
+}
+
+### Register - Minimal Valid User (no name)
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "jane.smith@example.com",
+  "username": "jane_smith",
+  "password": "password123",
+  "dateOfBirth": "1990-03-20"
+}
+
+### Register - Invalid Email
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "username": "testuser",
+  "password": "password123",
+  "dateOfBirth": "1990-01-01"
+}
+
+### Register - Short Password
+POST http://localhost:3001/auth/register
 Content-Type: application/json
 
 {
   "email": "test@example.com",
-  "name": "Test User"
+  "username": "testuser",
+  "password": "short",
+  "dateOfBirth": "1990-01-01"
 }
 
-### Get all users
-GET http://localhost:3001/users
+### Register - Invalid Username (special chars)
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "username": "test@user!",
+  "password": "password123",
+  "dateOfBirth": "1990-01-01"
+}
+
+### Register - Underage User
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "child@example.com",
+  "username": "younguser",
+  "password": "password123",
+  "dateOfBirth": "2020-01-01"
+}
+
+# ========================================
+# 🔐 LOGIN
+# ========================================
+
+### Login - Valid Credentials
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "john.smith@example.com",
+  "password": "newsecurepassword123"
+}
+
+### Login - Invalid Email
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "nonexistent@example.com",
+  "password": "password123"
+}
+
+### Login - Wrong Password
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "wrongpassword"
+}
+
+### Login - Invalid Email Format
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "password": "password123"
+}
+
+### Login - Missing Fields
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
+# ========================================
+# 👤 PROFILE MANAGEMENT
+# ========================================
+
+### Get Profile - Valid Token (use cookie from login)
+GET http://localhost:3001/auth/profile
+Content-Type: application/json
+
+### Get Profile - No Authentication
+GET http://localhost:3001/auth/profile
+Content-Type: application/json
+
+### Update Profile - Change Name
+PUT http://localhost:3001/auth/profile
+Content-Type: application/json
+
+{
+  "name": "John Updated Doe"
+}
+
+### Update Profile - Change Email
+PUT http://localhost:3001/auth/profile
+Content-Type: application/json
+
+{
+  "email": "john.updated@example.com"
+}
+
+### Update Profile - Change Username
+PUT http://localhost:3001/auth/profile
+Content-Type: application/json
+
+{
+  "username": "john_updated"
+}
+
+### Update Profile - Change Password
+PUT http://localhost:3001/auth/profile
+Content-Type: application/json
+
+{
+  "password": "newsecurepassword123"
+}
+
+### Update Profile - Multiple Fields
+PUT http://localhost:3001/auth/profile
+Content-Type: application/json
+
+{
+  "name": "John Smith",
+  "email": "john.smith@example.com",
+  "username": "john_smith"
+}
+
+### Update Profile - Change Date of Birth
+PUT http://localhost:3001/auth/profile
+Content-Type: application/json
+
+{
+  "dateOfBirth": "1996-05-15"
+}
+
+### Update Profile - Invalid Email
+PUT http://localhost:3001/auth/profile
+Content-Type: application/json
+
+{
+  "email": "invalid-email-format"
+}
+
+### Update Profile - Invalid Username
+PUT http://localhost:3001/auth/profile
+Content-Type: application/json
+
+{
+  "username": "invalid@username!"
+}
+
+### Update Profile - Short Password
+PUT http://localhost:3001/auth/profile
+Content-Type: application/json
+
+{
+  "password": "short"
+}
+
+### Update Profile - Empty Name
+PUT http://localhost:3001/auth/profile
+Content-Type: application/json
+
+{
+  "name": ""
+}
+
+# ========================================
+# 🚪 LOGOUT
+# ========================================
+
+### Logout - Clear Session
+POST http://localhost:3001/auth/logout
+Content-Type: application/json
+
+### Logout - Already Logged Out
+POST http://localhost:3001/auth/logout
+Content-Type: application/json
+
+# ========================================
+# 🧪 EDGE CASES & SECURITY TESTS
+# ========================================
+
+### Register - Duplicate Email
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "username": "different_user",
+  "password": "password123",
+  "dateOfBirth": "1990-01-01"
+}
+
+### Register - Duplicate Username
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "different@example.com",
+  "username": "john_doe",
+  "password": "password123",
+  "dateOfBirth": "1990-01-01"
+}
+
+### Login - SQL Injection Attempt
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com'; DROP TABLE users; --",
+  "password": "password123"
+}
+
+### Register - XSS Attempt in Name
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "xss@example.com",
+  "username": "xssuser",
+  "password": "password123",
+  "name": "<script>alert('xss')</script>",
+  "dateOfBirth": "1990-01-01"
+}
+
+### Update Profile - Null Values
+PUT http://localhost:3001/auth/profile
+Content-Type: application/json
+
+{
+  "name": null
+}
